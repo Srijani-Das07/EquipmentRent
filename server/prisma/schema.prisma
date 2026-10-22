@@ -1,0 +1,276 @@
+// Equipment Rental & Maintenance Management System
+// Conventions: money is integer paise (INR x 100). All timestamps are UTC.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  STAFF
+  ADMIN
+}
+
+// "Booked" is not stored: it is derived from overlapping bookings.
+enum UnitStatus {
+  AVAILABLE
+  UNDER_MAINTENANCE
+  RETIRED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum ChargeType {
+  BOOKING
+  BOOKING_ADJUSTMENT
+  LATE_CANCELLATION
+  LATE_FEE
+  DAMAGE_PENALTY
+}
+
+enum ChargeStatus {
+  PENDING
+  PAID
+  FAILED
+  VOID
+}
+
+enum PaymentMethod {
+  UPI
+  CARD
+}
+
+enum PaymentKind {
+  PAYMENT
+  REFUND
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum Condition {
+  GOOD
+  MINOR_DAMAGE
+  MAJOR_DAMAGE
+  LOST
+}
+
+enum MaintenanceTrigger {
+  DAMAGE
+  PERIODIC
+}
+
+enum ConfigAuditAction {
+  UPDATE
+  RESTORE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(CUSTOMER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+
+  bookings          Booking[]        @relation("CustomerBookings")
+  handedOver        Booking[]        @relation("HandedOverBy")
+  processedReturns  ReturnRecord[]
+  clearedMaintenance MaintenanceLog[]
+  configAudits      ConfigAuditLog[]
+
+  @@index([role])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  equipment Equipment[]
+}
+
+// Catalog entry (the "model"). Customers book this; the system assigns a free unit.
+model Equipment {
+  id             String    @id @default(cuid())
+  name           String
+  categoryId     String
+  description    String    @default("")
+  dailyRatePaise Int
+  itemValuePaise Int
+  imageUrl       String?
+  retiredAt      DateTime? @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(3)
+
+  category Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  units    EquipmentUnit[]
+
+  @@index([categoryId])
+}
+
+// Physical piece of equipment.
+model EquipmentUnit {
+  id                      String              @id @default(cuid())
+  equipmentId             String
+  tag                     String              @unique
+  status                  UnitStatus          @default(AVAILABLE)
+  lifetimeRentals         Int                 @default(0)
+  rentalsSinceMaintenance Int                 @default(0)
+  maintenanceDue          Boolean             @default(false)
+  maintenanceReason       MaintenanceTrigger?
+  createdAt               DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime            @updatedAt @db.Timestamptz(3)
+
+  equipment Equipment        @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  bookings  Booking[]
+  logs      MaintenanceLog[]
+
+  @@index([equipmentId, status])
+}
+
+// No-overlap per unit is enforced in the database by an exclusion constraint
+// (see the migration SQL), because Prisma cannot express it.
+model Booking {
+  id              String        @id @default(cuid())
+  reference       String        @unique
+  customerId      String
+  unitId          String
+  startAt         DateTime      @db.Timestamptz(3)
+  endAt           DateTime      @db.Timestamptz(3)
+  rentalDays      Int
+  dailyRatePaise  Int
+  costPaise       Int
+  status          BookingStatus @default(PENDING)
+  holdExpiresAt   DateTime?     @db.Timestamptz(3)
+  handedOverAt    DateTime?     @db.Timestamptz(3)
+  handedOverById  String?
+  returnedAt      DateTime?     @db.Timestamptz(3)
+  cancelledAt     DateTime?     @db.Timestamptz(3)
+  createdAt       DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime      @updatedAt @db.Timestamptz(3)
+
+  customer     User          @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Restrict)
+  handedOverBy User?         @relation("HandedOverBy", fields: [handedOverById], references: [id], onDelete: SetNull)
+  unit         EquipmentUnit @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  charges      Charge[]
+  returnRecord ReturnRecord?
+
+  @@index([customerId, status])
+  @@index([unitId, startAt, endAt])
+  @@index([status, holdExpiresAt])
+}
+
+// Ledger of everything a customer can owe. Amounts are snapshotted when created.
+model Charge {
+  id             String       @id @default(cuid())
+  bookingId      String
+  type           ChargeType
+  amountPaise    Int
+  status         ChargeStatus @default(PENDING)
+  description    String
+  policySnapshot Json?
+  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
+  paidAt         DateTime?    @db.Timestamptz(3)
+
+  booking  Booking   @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  payments Payment[]
+
+  @@index([bookingId])
+  @@index([status])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  paymentRef    String        @unique
+  chargeId      String
+  kind          PaymentKind   @default(PAYMENT)
+  method        PaymentMethod
+  amountPaise   Int
+  status        PaymentStatus @default(PENDING)
+  cardBrand     String?
+  cardLast4     String?
+  upiRef        String?
+  failureReason String?
+  createdAt     DateTime      @default(now()) @db.Timestamptz(3)
+  completedAt   DateTime?     @db.Timestamptz(3)
+
+  charge  Charge   @relation(fields: [chargeId], references: [id], onDelete: Restrict)
+  receipt Receipt?
+
+  @@index([chargeId])
+  @@index([status])
+}
+
+model Receipt {
+  id            String   @id @default(cuid())
+  receiptNumber String   @unique
+  paymentId     String   @unique
+  issuedAt      DateTime @default(now()) @db.Timestamptz(3)
+  payload       Json
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+}
+
+model ReturnRecord {
+  id            String    @id @default(cuid())
+  bookingId     String    @unique
+  processedById String
+  condition     Condition
+  returnedAt    DateTime  @db.Timestamptz(3)
+  dueAt         DateTime  @db.Timestamptz(3)
+  daysLate      Int       @default(0)
+  notes         String?
+  createdAt     DateTime  @default(now()) @db.Timestamptz(3)
+
+  booking     Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  processedBy User    @relation(fields: [processedById], references: [id], onDelete: Restrict)
+}
+
+model MaintenanceLog {
+  id          String             @id @default(cuid())
+  unitId      String
+  trigger     MaintenanceTrigger
+  notes       String?
+  openedAt    DateTime           @default(now()) @db.Timestamptz(3)
+  clearedAt   DateTime?          @db.Timestamptz(3)
+  clearedById String?
+
+  unit      EquipmentUnit @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  clearedBy User?         @relation(fields: [clearedById], references: [id], onDelete: SetNull)
+
+  @@index([unitId, clearedAt])
+}
+
+model ConfigAuditLog {
+  id          String            @id @default(cuid())
+  actorId     String
+  action      ConfigAuditAction
+  changes     Json
+  before      Json
+  after       Json
+  versionFile String?
+  createdAt   DateTime          @default(now()) @db.Timestamptz(3)
+
+  actor User @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([createdAt])
+}

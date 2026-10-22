@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "defaults": {
+    "maintenance_interval_rentals": 10,
+    "damage_penalty_pct": { "minor": 15, "major": 50, "lost": 100 },
+    "late_fee_per_day": 100,
+    "late_cancellation_fee_pct": 20
+  },
+  "system": {
+    "data_retention_days": 365,
+    "payment_hold_minutes": 15,
+    "pickup_time": "09:00",
+    "timezone": "Asia/Kolkata"
+  },
+  "overrides": {
+    "categories": {
+      "electronics": {
+        "maintenance_interval_rentals": 8,
+        "damage_penalty_pct": { "minor": 20, "major": 60 }
+      },
+      "events-party": {
+        "maintenance_interval_rentals": 15
+      }
+    },
+    "equipment": {}
+  }
+}
