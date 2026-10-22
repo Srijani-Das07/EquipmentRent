@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+*.log
+.DS_Store
+server/config/versions/*
+!server/config/versions/.gitkeep
+server/config/*.tmp
+client/dist
+coverage
