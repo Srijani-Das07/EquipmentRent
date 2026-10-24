@@ -3,11 +3,24 @@ import { useAuth } from '../auth/AuthContext';
 import { roleLabel, type Role } from '../api/auth';
 
 const NAV: Record<Role, Array<{ to: string; label: string }>> = {
-  CUSTOMER: [{ to: '/customer', label: 'Dashboard' }],
-  STAFF: [{ to: '/staff', label: 'Dashboard' }],
+  CUSTOMER: [
+    { to: '/customer', label: 'Dashboard' },
+    { to: '/my-bookings', label: 'My bookings' },
+    { to: '/payments', label: 'Payments' },
+    { to: '/catalog', label: 'Catalog' },
+  ],
+  STAFF: [
+    { to: '/staff', label: 'Dashboard' },
+    { to: '/staff/bookings', label: 'Bookings' },
+    { to: '/staff/inventory', label: 'Inventory' },
+    { to: '/catalog', label: 'Catalog' },
+  ],
   ADMIN: [
     { to: '/staff', label: 'Staff tools' },
+    { to: '/staff/bookings', label: 'Bookings' },
     { to: '/admin', label: 'Admin' },
+    { to: '/admin/inventory', label: 'Inventory' },
+    { to: '/catalog', label: 'Catalog' },
   ],
 };
 
@@ -59,6 +72,9 @@ export default function Layout() {
               </>
             ) : (
               <>
+                <NavLink to="/catalog" className={linkClass}>
+                  Catalog
+                </NavLink>
                 <NavLink to="/login" className={linkClass}>
                   Log in
                 </NavLink>
