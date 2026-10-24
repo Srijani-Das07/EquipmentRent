@@ -60,3 +60,7 @@ npm install qrcode.react -w client
 
 npx vitest run tests/bookings.unit.test.ts tests/payments.unit.test.ts
 npx vitest run tests/booking.test.ts
+
+
+npx vitest run tests/returns.unit.test.ts
+npx vitest run tests/returns.test.ts
