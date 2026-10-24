@@ -46,3 +46,17 @@ within ~2 seconds without a restart, and every save made through the app is back
 
 - npm install jsonwebtoken cookie-parser -w server
 - npm install -D @types/jsonwebtoken @types/cookie-parser -w server
+
+For mod 2:
+
+Run
+
+Unit tests, from the server folder: npx vitest run tests/inventory.unit.test.ts --reporter=verbose
+Integration tests, with PostgreSQL running: npx vitest run tests/inventory.test.ts --reporter=verbose
+App: npm run dev. Check /catalog logged out, then staff@rental.local and admin@rental.local for the inventory pages.
+
+
+npm install qrcode.react -w client
+
+npx vitest run tests/bookings.unit.test.ts tests/payments.unit.test.ts
+npx vitest run tests/booking.test.ts
