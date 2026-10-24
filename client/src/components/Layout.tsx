@@ -12,12 +12,16 @@ const NAV: Record<Role, Array<{ to: string; label: string }>> = {
   STAFF: [
     { to: '/staff', label: 'Dashboard' },
     { to: '/staff/bookings', label: 'Bookings' },
+    { to: '/staff/returns', label: 'Returns' },
+    { to: '/staff/maintenance', label: 'Maintenance' },
     { to: '/staff/inventory', label: 'Inventory' },
     { to: '/catalog', label: 'Catalog' },
   ],
   ADMIN: [
     { to: '/staff', label: 'Staff tools' },
     { to: '/staff/bookings', label: 'Bookings' },
+    { to: '/staff/returns', label: 'Returns' },
+    { to: '/staff/maintenance', label: 'Maintenance' },
     { to: '/admin', label: 'Admin' },
     { to: '/admin/inventory', label: 'Inventory' },
     { to: '/catalog', label: 'Catalog' },

@@ -20,6 +20,8 @@ import Payment from './pages/Payment';
 import PaymentsPage from './pages/PaymentsPage';
 import Receipt from './pages/Receipt';
 import StaffBookings from './pages/StaffBookings';
+import StaffReturns from './pages/StaffReturns';
+import MaintenanceQueue from './pages/MaintenanceQueue';
 
 function DashboardRedirect() {
   const { user, isLoading } = useAuth();
@@ -51,6 +53,8 @@ export default function App() {
           <Route path="pay/:chargeId" element={<RequireRole roles={['CUSTOMER']}><Payment /></RequireRole>} />
           <Route path="payments" element={<RequireRole roles={['CUSTOMER']}><PaymentsPage /></RequireRole>} />
           <Route path="receipts/:id" element={<RequireRole roles={['CUSTOMER', 'STAFF', 'ADMIN']}><Receipt /></RequireRole>} />
+          <Route path="staff/returns" element={<RequireRole roles={['STAFF', 'ADMIN']}><StaffReturns /></RequireRole>} />
+<         Route path="staff/maintenance" element={<RequireRole roles={['STAFF', 'ADMIN']}><MaintenanceQueue /></RequireRole>} />
           <Route path="staff/bookings" element={<RequireRole roles={['STAFF', 'ADMIN']}><StaffBookings /></RequireRole>} />
           <Route
             path="staff"
