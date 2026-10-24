@@ -13,6 +13,8 @@ import { usersRouter } from './modules/users/users.routes.js';
 import { categoriesRouter, equipmentRouter, unitsRouter } from './modules/inventory/inventory.routes.js';
 import { createBookingsRouter } from './modules/bookings/booking.routes.js';
 import { createChargesRouter, receiptsRouter } from './modules/payments/payments.routes.js';
+import { createReturnsRouter } from './modules/returns/returns.routes.js';
+import { maintenanceRouter } from './modules/maintenance/maintenance.routes.js';
 
 export type AppDeps = HealthDeps;
 
@@ -53,6 +55,8 @@ export function createApp(deps: AppDeps): Express {
   app.use('/api/bookings', createBookingsRouter(deps.policy));
   app.use('/api/charges', createChargesRouter());
   app.use('/api/receipts', receiptsRouter);
+  app.use('/api/returns', createReturnsRouter(deps.policy));
+  app.use('/api/maintenance', maintenanceRouter);
   // Next module routers are mounted here
 
   app.use(notFoundHandler);

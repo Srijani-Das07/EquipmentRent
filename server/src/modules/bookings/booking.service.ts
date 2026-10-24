@@ -19,6 +19,7 @@ import {
 } from './booking.rules.js';
 import type { BookingListQuery, BookingRequest, ModifyBookingInput } from './booking.schemas.js';
 import { expireStaleHolds } from './holds.js';
+import { reassignBooking } from './reassign.js';
 
 type Db = Prisma.TransactionClient;
 type Actor = { id: string; role: 'CUSTOMER' | 'STAFF' | 'ADMIN' };
@@ -496,6 +497,13 @@ export async function handoverBooking(staff: Actor, id: string, policy: PolicySe
     throw AppError.conflict('Outstanding charges must be paid before handover');
   }
 
+  if (booking.unit.status !== 'AVAILABLE') {
+    // The assigned unit went to maintenance since booking: swap in another free unit if there is one.
+    if (!(await reassignBooking(booking.id, now))) {
+      throw AppError.conflict('The assigned unit is under maintenance and no other unit is free for these dates');
+    }
+  }
+  
   const claimed = await prisma.booking.updateMany({
     where: { id, status: 'CONFIRMED' },
     data: { status: 'ACTIVE', handedOverAt: now, handedOverById: staff.id },
