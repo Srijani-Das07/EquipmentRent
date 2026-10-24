@@ -134,7 +134,7 @@ export default function AdminDashboard() {
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <UpcomingCard title="Inventory" description="Add, edit, retire equipment and manage categories." module="Module 2" />
+        <UpcomingCard title="Inventory" description="Add, edit, retire equipment and manage categories." to="/admin/inventory" />
         <UpcomingCard title="Policy configuration" description="Edit fees, penalties and maintenance intervals." module="Module 7" />
         <UpcomingCard title="Reports" description="Bookings, revenue, utilization and maintenance reports." module="Module 8" />
       </div>

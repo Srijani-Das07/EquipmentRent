@@ -15,6 +15,7 @@ export default function StaffDashboard() {
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <UpcomingCard title="Inventory" description="View equipment and update the status of physical units." to="/staff/inventory" />
         <UpcomingCard title="Hand over equipment" description="Mark confirmed bookings as picked up." module="Module 3" />
         <UpcomingCard title="Process returns" description="Log item condition and apply late fees and damage penalties." module="Module 5" />
         <UpcomingCard title="Maintenance queue" description="View flagged items and clear them after maintenance." module="Module 6" />

@@ -15,7 +15,7 @@ export default function CustomerDashboard() {
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <UpcomingCard title="Browse equipment" description="Search the catalog and filter by category and availability." module="Module 2" />
+        <UpcomingCard title="Browse equipment" description="Search the catalog and filter by category and availability." to="/catalog" />
         <UpcomingCard title="My bookings" description="Book, modify or cancel rentals and track their status." module="Module 3" />
         <UpcomingCard title="Payments and receipts" description="Pay for bookings and view outstanding charges and receipts." module="Module 4" />
       </div>
