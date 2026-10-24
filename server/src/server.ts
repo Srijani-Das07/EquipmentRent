@@ -4,6 +4,7 @@ import { logger } from './lib/logger.js';
 import { prisma } from './lib/db.js';
 import { policy } from './config/index.js';
 import { createApp } from './app.js';
+import { expireStaleHolds } from './modules/bookings/holds.js';
 
 async function main() {
   await policy.start(); // throws on an invalid config: we refuse to run on bad business rules
@@ -15,6 +16,11 @@ async function main() {
     },
     policy,
   });
+  // Release unpaid bookings whose payment hold has run out.
+  const holdSweeper = setInterval(() => {
+    expireStaleHolds().catch((err) => logger.error({ err }, 'hold sweep failed'));
+  }, 60_000);
+  holdSweeper.unref();
 
   const server: Server = app.listen(env.PORT, () => {
     logger.info(`API listening on http://localhost:${env.PORT} (${env.NODE_ENV})`);
@@ -25,6 +31,7 @@ async function main() {
     if (shuttingDown) return;
     shuttingDown = true;
     logger.info({ signal }, 'shutting down');
+    clearInterval(holdSweeper);
     policy.stop();
     server.close(async () => {
       await prisma.$disconnect();

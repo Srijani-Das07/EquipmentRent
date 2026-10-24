@@ -10,6 +10,9 @@ import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { healthRouter, type HealthDeps } from './routes/health.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { usersRouter } from './modules/users/users.routes.js';
+import { categoriesRouter, equipmentRouter, unitsRouter } from './modules/inventory/inventory.routes.js';
+import { createBookingsRouter } from './modules/bookings/booking.routes.js';
+import { createChargesRouter, receiptsRouter } from './modules/payments/payments.routes.js';
 
 export type AppDeps = HealthDeps;
 
@@ -44,6 +47,12 @@ export function createApp(deps: AppDeps): Express {
   app.use('/api/health', healthRouter(deps));
   app.use('/api/auth', authRouter);
   app.use('/api/users', usersRouter);
+  app.use('/api/categories', categoriesRouter);
+  app.use('/api/equipment', equipmentRouter);
+  app.use('/api/units', unitsRouter);
+  app.use('/api/bookings', createBookingsRouter(deps.policy));
+  app.use('/api/charges', createChargesRouter());
+  app.use('/api/receipts', receiptsRouter);
   // Next module routers are mounted here
 
   app.use(notFoundHandler);
